@@ -16,6 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+var check = false;
+var guardar;
+var guardarFinal = 10;
 var app = {
     // Application Constructor
     initialize: function() {
@@ -39,6 +42,16 @@ var app = {
 
         document.getElementById("pitar").addEventListener("click",showPromtPitar,false)
         document.getElementById("vibrar").addEventListener("click",showPromtVibrar,false)
+
+        var watchID;
+        var options = {
+            frequency: 1000
+        };
+        watchID = navigator.compass.watchHeading(onSuccess, onError, options);
+
+        document.getElementById("norte").addEventListener("click",showNorte,false)
+        document.getElementById("rotar").addEventListener("click",rotar,false)
+        document.getElementById("guardar").addEventListener("click",guardarFunction,false)
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
@@ -72,6 +85,19 @@ function showPromtVibrar() {
         0                 // defaultText
     );
 }
+function rotar() {
+    navigator.notification.prompt(
+        'Numero de grados a rotar?',  // message
+        rotacion,                  // callback to invoke
+        'grados a rotar',            // title
+        ['Ok','Exit'],             // buttonLabels
+        0                 // defaultText
+    );
+}
+
+function guardarFunction() {
+    guardarFinal = guardar
+}
 
 function pitar(veces) {
     navigator.notification.beep(veces.input1);
@@ -80,4 +106,37 @@ function pitar(veces) {
 function vibrar(segundos) {
     navigator.vibrate(segundos.input1*1000)
 }
+function rotacion(grados) {
+   /* document.getElementById("brujula").style["-ms-transform"] = "rotate("+grados.input1+")deg"
+    document.getElementById("brujula").style["-webkit-transform"] = "rotate("+grados.input1+")deg"
+    document.getElementById("brujula").style.transform = "rotate("+grados.input1+")deg"*/
+    document.getElementById("brujula").style.transition = "transform 5s";
+    document.getElementById("brujula").style.transform = "rotate("+grados.input1+"deg)"
+    //document.getElementById("brujula").style.transform =  "rotate(7deg)"
+}
 
+function showNorte() {
+    if(check){
+        check = false
+    }else {
+        check = true
+    }
+}
+
+function onSuccess(heading) {
+    console.log('Heading: ' + heading.magneticHeading);
+    if(check){
+        document.getElementById("nort").innerHTML = heading.magneticHeading
+        check = false;document.getElementById("brujula").style.transition = "transform 5s";
+        document.getElementById("brujula").style.transform = "rotate("+heading.magneticHeading+"deg)"
+    }
+    guardar = heading.magneticHeading
+
+    console.log("llego guardarFinal " + guardarFinal + " guardar " + guardar + " heading " + heading.magneticHeading)
+    if(guardarFinal == heading.magneticHeading){
+        navigator.vibrate(1000)
+    }
+};
+function onError(compassError) {
+    alert('Compass error: ' + compassError.code);
+};
